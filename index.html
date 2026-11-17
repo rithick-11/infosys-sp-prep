@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Infosys SP Prep</title>
+<style>
+:root{--bg:#09090b;--s:#18181b;--s2:#27272a;--p:#8b5cf6;--ok:#22c55e;--t:#fafafa;--t2:#a1a1aa}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--t);font:15px/1.55 system-ui,Segoe UI,Roboto,sans-serif;display:flex;min-height:100vh}
+aside{width:260px;background:var(--s);padding:16px;position:sticky;top:0;height:100vh;overflow:auto;flex-shrink:0}
+aside h1{font-size:18px;margin:0 0 4px}
+aside .sub{color:var(--t2);font-size:12px;margin-bottom:12px}
+.bar{height:8px;background:var(--s2);border-radius:99px;overflow:hidden;margin:6px 0 14px}
+.bar i{display:block;height:100%;background:var(--p);width:0;transition:width .3s}
+nav a{display:flex;justify-content:space-between;padding:8px 10px;border-radius:8px;color:var(--t2);text-decoration:none;cursor:pointer;font-size:14px}
+nav a:hover{background:var(--s2);color:var(--t)}
+nav a.on{background:var(--p);color:#fff}
+main{flex:1;padding:24px;max-width:900px;min-width:0}
+input[type=search]{width:100%;padding:10px 12px;background:var(--s);border:1px solid var(--s2);border-radius:10px;color:var(--t);margin-bottom:16px;font-size:15px}
+h2{margin:0 0 4px}
+.meta{color:var(--t2);font-size:13px;margin-bottom:16px}
+.card{display:flex;gap:12px;background:var(--s);border:1px solid var(--s2);border-radius:12px;padding:12px 14px;margin-bottom:8px}
+.card.done{opacity:.55}
+.card input{margin-top:5px;accent-color:var(--p);width:18px;height:18px;flex-shrink:0}
+.card b{display:block}
+.card span{color:var(--t2);font-size:14px}
+.tag{font-size:11px;color:var(--p);margin-left:6px}
+.menu{display:none;position:fixed;top:10px;right:10px;z-index:9;background:var(--p);color:#fff;border:0;border-radius:8px;padding:8px 12px}
+@media(max-width:760px){aside{position:fixed;left:-270px;z-index:8;transition:left .2s}aside.open{left:0}.menu{display:block}main{padding:56px 14px 24px}}
+</style>
+</head>
+<body>
+<button class="menu" onclick="document.querySelector('aside').classList.toggle('open')">Menu</button>
+<aside>
+  <h1>Infosys SP Prep</h1>
+  <div class="sub">Specialist Programmer: in-person interview</div>
+  <div id="pct" class="sub"></div>
+  <div class="bar"><i id="fill"></i></div>
+  <nav id="nav"></nav>
+</aside>
+<main>
+  <input type="search" id="q" placeholder="Search any concept (e.g. dijkstra, acid, deadlock)...">
+  <div id="view"></div>
+</main>
+
+<script>
+const DATA = [
+{id:"plan",title:"1. Plan & Interview Day",items:[
+["Priority order","DSA (45%) > CS fundamentals (20%) > Java/OOP & projects > HR. Spend most time on Arrays, Trees, Graphs, DP."],
+["Time-short plan","Day 1-2: patterns + Arrays/Strings. Day 3: Trees/Graphs. Day 4: DP/Greedy/Backtracking. Day 5: Java/OOP/DBMS/SQL. Day 6: OS/CN/Projects/HR. Last day: revise only items you marked weak."],
+["Coding round approach","Clarify input/constraints, give brute force first, then optimise, state time and space complexity, dry-run on a small example, test edge cases (empty, one element, duplicates, negatives, overflow)."],
+["Think aloud","In person, interviewers grade your reasoning. Speak the approach before coding, name the pattern, and say why it is correct."],
+["Edge cases checklist","Null/empty input, single element, all same values, sorted/reverse sorted, integer overflow (use long), negative numbers, disconnected graph, cycles."],
+["Constraint to complexity","n up to 10^5: O(n log n) or better. n up to 1000: O(n^2). n up to 20: exponential/bitmask. n up to 10^8: O(n) at most."],
+["If stuck","Restate the problem, try a small example by hand, look for a pattern (sorting, hashing, two pointers, DP), and ask a clarifying question instead of going silent."],
+["Day-of basics","ID proof, resume copies, pen and paper, be on time, dress neatly, keep answers structured and honest. Do not claim skills you cannot explain."]
+]},
+{id:"patterns",title:"2. Complexity & Patterns",items:[
+["Big-O ladder","O(1) < O(log n) < O(n) < O(n log n) < O(n^2) < O(2^n) < O(n!)."],
+["Amortized analysis","Dynamic array append is O(1) amortized because resizing doubles capacity. Hash map ops O(1) average, O(n) worst case."],
+["Recursion space","Recursion depth counts as stack space: DFS on a skewed tree is O(n) space."],
+["Pattern: Two pointers","Sorted array pair sum, remove duplicates, reverse, container with most water. O(n)."],
+["Pattern: Sliding window","Longest substring without repeats, max sum subarray of size k, min window substring. Fixed or variable window."],
+["Pattern: Prefix sum + hashmap","Subarray sum equals K: store count of prefix sums seen. O(n)."],
+["Pattern: Binary search on answer","When answer is monotonic: Koko eating bananas, ship packages, allocate books, aggressive cows."],
+["Pattern: Monotonic stack","Next greater/smaller element, largest rectangle in histogram, daily temperatures."],
+["Pattern: BFS vs DFS","BFS for shortest path in unweighted graph and level order. DFS for connectivity, cycles, topological order, backtracking."],
+["Pattern: DP recognition","Overlapping subproblems + optimal substructure, with words like 'count ways', 'min/max cost', 'can we reach'."],
+["Pattern: Heap","Top K, K-th largest, merge K lists, running median, scheduling."],
+["Pattern: Union-Find","Dynamic connectivity, number of provinces, Kruskal MST, detect cycle in undirected graph."]
+]},
+{id:"arrays",title:"3. Arrays & Strings",items:[
+["Kadane's algorithm","Max subarray sum: cur = max(a[i], cur + a[i]); best = max(best, cur). O(n), O(1)."],
+["Dutch National Flag","Sort 0/1/2 in one pass with low, mid, high pointers. O(n)."],
+["Boyer-Moore voting","Majority element (> n/2): keep candidate and count. O(n), O(1)."],
+["Prefix and suffix sums","Product of array except self, range sum queries, equilibrium index."],
+["Hashing and frequency","Two Sum, anagrams, first non-repeating char, longest consecutive sequence (HashSet)."],
+["Subarray vs subsequence","Subarray is contiguous; subsequence keeps order but may skip. Count of subsequences is 2^n."],
+["Rotate array","Reverse whole array, then reverse the two parts. O(n), O(1)."],
+["Merge intervals","Sort by start, merge when next.start <= cur.end."],
+["KMP","Build LPS (longest proper prefix that is also suffix) array so the pattern never moves text pointer backward. O(n+m)."],
+["Rabin-Karp","Rolling hash for substring search. Average O(n+m), worst O(nm) on collisions."],
+["Z algorithm","Z[i] = longest match of s[i..] with prefix of s. Pattern search in O(n+m)."],
+["Manacher","Longest palindromic substring in O(n) using mirrored palindrome radii."],
+["Palindrome checks","Two pointers from ends; expand around center for longest palindromic substring O(n^2)."],
+["String basics (Java)","Strings are immutable. Use StringBuilder for concatenation in loops. equals() compares content, == compares reference."]
+]},
+{id:"sortsearch",title:"4. Searching & Sorting",items:[
+["Binary search template","lo=0, hi=n-1; mid = lo + (hi-lo)/2 (avoids overflow). O(log n)."],
+["Lower and upper bound","First index with a[i] >= x (lower) or > x (upper). Gives first/last occurrence and count."],
+["Rotated sorted array","Find which half is sorted, check whether target lies in it, discard the other half. O(log n)."],
+["Binary search on answer","Define feasible(x) as monotonic; search the smallest/largest x that is feasible."],
+["Merge sort","Divide and merge. O(n log n) always, O(n) space, stable. Counts inversions."],
+["Quick sort","Partition around pivot. Average O(n log n), worst O(n^2), in-place, not stable. Random pivot avoids worst case."],
+["Heap sort","Build max heap then extract. O(n log n), O(1) space, not stable."],
+["Counting and radix sort","Counting: O(n+k). Radix: O(d(n+k)). Non-comparison sorts for bounded integers."],
+["Quickselect","Kth smallest in average O(n) using the quick sort partition."],
+["Stable vs unstable","Stable keeps equal elements in original order: merge, insertion, counting, bubble. Unstable: quick, heap, selection."],
+["Java sorting","Arrays.sort on primitives uses dual-pivot quicksort. Objects use TimSort (stable, O(n log n))."]
+]},
+{id:"linear",title:"5. Linked List, Stack, Queue",items:[
+["Reverse linked list","Iterative with prev, cur, next pointers. O(n), O(1)."],
+["Fast and slow pointers","Find middle, detect cycle (Floyd), find cycle start (reset one pointer to head, move both by one)."],
+["Merge two sorted lists","Dummy head node and compare. O(n+m)."],
+["Intersection of two lists","Two pointers switch heads at end; they meet at the intersection. O(n+m)."],
+["Reverse in K groups","Reverse each block of k, link blocks, leave the remainder as is."],
+["Merge K sorted lists","Min-heap of heads: O(N log k). Or divide and conquer merge."],
+["LRU Cache","HashMap + doubly linked list gives O(1) get and put. Java: LinkedHashMap with accessOrder."],
+["Remove Nth from end","Move fast n steps ahead, then move both. Use a dummy node."],
+["Stack uses","Balanced parentheses, undo, DFS, expression evaluation, monotonic stack problems."],
+["Infix to postfix","Operand goes to output; operator pops higher or equal precedence from stack first; parentheses handled by push/pop."],
+["Next greater element","Monotonic decreasing stack, one pass. O(n)."],
+["Largest rectangle in histogram","Monotonic increasing stack; width found from previous and next smaller index. O(n)."],
+["Sliding window maximum","Monotonic deque storing indices. O(n)."],
+["Queue variants","Circular queue (fixed size, modulo indices), deque (both ends), priority queue (heap)."],
+["Stack using queues and reverse","Two queues or one queue with rotation. Queue using two stacks gives amortized O(1)."]
+]},
+{id:"trees",title:"6. Trees & BST",items:[
+["Traversals","Inorder (L,N,R) gives sorted order in a BST. Preorder (N,L,R) for copying. Postorder (L,R,N) for deletion. Level order uses BFS with a queue."],
+["Iterative traversals","Use an explicit stack. Morris traversal gives O(1) space using threaded links."],
+["Height and diameter","Height = 1 + max(left, right). Diameter = max over nodes of left height + right height. Compute in one DFS."],
+["Lowest Common Ancestor","Binary tree: if both sides return non-null, the node is the LCA. BST: go left or right by value."],
+["Validate BST","Pass (min, max) bounds down; inorder must be strictly increasing."],
+["Maximum path sum","At each node, gain = node + max(0, left) + max(0, right); return node + max(0, left, right) upward."],
+["Zigzag, vertical, boundary","Level order with a direction flag; vertical uses column index with a map; boundary = left edge + leaves + right edge."],
+["Kth smallest in BST","Inorder traversal and stop at k. O(h + k)."],
+["Construct tree","Preorder + inorder (or postorder + inorder) uniquely define a binary tree. Use a hashmap for inorder indices."],
+["Balanced trees","AVL: balance factor within -1..1, rotations. Red-Black: colour rules keep height at most 2 log n. Both give O(log n)."],
+["Trie","Prefix tree: insert, search, startsWith in O(L). Autocomplete, word search, XOR maximum."],
+["Segment tree","Range query and point/range update in O(log n). Build O(n). Use for range sum/min/max."],
+["Fenwick tree (BIT)","Prefix sums and point updates in O(log n), smaller and simpler than a segment tree."],
+["Binary lifting","Precompute 2^k-th ancestors for LCA and k-th ancestor queries in O(log n)."],
+["Complete vs full vs perfect","Full: 0 or 2 children. Complete: all levels filled except possibly last, left-aligned (heap). Perfect: all levels full."]
+]},
+{id:"graphs",title:"7. Graphs",items:[
+["Representation","Adjacency list: O(V+E) space, good for sparse. Matrix: O(V^2), O(1) edge check, good for dense."],
+["BFS","Queue; shortest path in unweighted graph; level by level. O(V+E)."],
+["DFS","Recursion or stack; connectivity, cycle, components, topological order. O(V+E)."],
+["Grid BFS/DFS","4 or 8 direction arrays; number of islands, flood fill, shortest path in maze."],
+["Multi-source BFS","Push all sources initially: rotting oranges, distance to nearest 0/gate."],
+["Cycle detection","Undirected: DFS with parent or DSU. Directed: DFS with recursion-stack (3 colours) or Kahn's count."],
+["Bipartite check","Two-colour with BFS/DFS; odd cycle means not bipartite."],
+["Topological sort","DAG only. Kahn (BFS with indegree) or DFS finish order reversed. Course schedule, build order."],
+["Dijkstra","Min-heap; non-negative weights. O((V+E) log V). Fails with negative edges."],
+["Bellman-Ford","Relax all edges V-1 times; handles negative weights; detects negative cycles. O(VE)."],
+["Floyd-Warshall","All-pairs shortest path with a 3-nested loop. O(V^3)."],
+["0-1 BFS","Deque: push weight 0 edges to front, weight 1 edges to back. O(V+E)."],
+["Disjoint Set Union","find with path compression, union by rank/size. Nearly O(1) amortized (inverse Ackermann)."],
+["MST: Kruskal","Sort edges, add if endpoints are in different sets (DSU). O(E log E)."],
+["MST: Prim","Grow tree from a node with a min-heap of edges. O(E log V)."],
+["SCC: Kosaraju/Tarjan","Kosaraju: DFS order, transpose graph, DFS again. Tarjan: low-link values in one DFS. O(V+E)."],
+["Bridges & articulation points","DFS with discovery time and low-link: edge u-v is a bridge if low[v] > disc[u]."],
+["Eulerian path","Edge-visiting path. Exists if 0 or 2 odd-degree vertices (undirected). Hierholzer builds it in O(E)."],
+["Common problems","Clone graph, word ladder, course schedule, network delay time, cheapest flights within K stops, alien dictionary."]
+]},
+{id:"dp",title:"8. Dynamic Programming",items:[
+["How to approach DP","Define state, write recurrence, set base cases, choose order (memoization top-down or tabulation bottom-up), then optimise space."],
+["Climbing stairs / Fibonacci","dp[i] = dp[i-1] + dp[i-2]. Space reduces to O(1)."],
+["House robber","dp[i] = max(dp[i-1], dp[i-2] + a[i]). Circular variant: run twice excluding first or last."],
+["0/1 Knapsack","dp[i][w] = max(skip, take). 1D version: iterate w from high to low."],
+["Unbounded knapsack / Coin change","Iterate w from low to high. Min coins: dp[x] = min(dp[x-c]) + 1. Ways: loop coins outer."],
+["Subset sum & partition","Boolean knapsack; equal partition if total/2 is reachable."],
+["LCS","if equal: 1 + dp[i-1][j-1], else max(dp[i-1][j], dp[i][j-1]). O(nm)."],
+["LIS","O(n^2) DP, or O(n log n) with patience sorting (binary search on tails array)."],
+["Edit distance","Insert, delete, replace: min of three neighbours + 1 if chars differ."],
+["Grid DP","Unique paths, min path sum, maximal square; dp from top/left."],
+["Matrix chain multiplication","Interval DP: dp[i][j] = min over k of dp[i][k] + dp[k+1][j] + cost. O(n^3)."],
+["Palindrome partitioning","Precompute palindrome table, then min cuts DP. O(n^2)."],
+["Stock buy/sell","States: holding or not, with transaction count or cooldown. Know the 6 variants."],
+["Interval & partition DP","Burst balloons, partition array for max sum: choose a split point k."],
+["DP on trees","Post-order DFS returning pair states: rob/not rob, diameter, max independent set."],
+["Bitmask DP / TSP","dp[mask][last] = min cost; O(2^n * n^2). Use for n up to ~20."],
+["Space optimisation","If dp[i] depends only on previous row/values, keep rolling arrays."]
+]},
+{id:"misc",title:"9. Greedy, Backtracking, Bits & Math",items:[
+["Greedy principle","Local best choice that provably leads to global best. Justify with an exchange argument."],
+["Activity selection / interval scheduling","Sort by end time, take the non-overlapping earliest finisher."],
+["Fractional knapsack","Sort by value/weight ratio. (0/1 knapsack is NOT greedy.)"],
+["Job sequencing","Sort by profit; place each job in the latest free slot before its deadline."],
+["Jump game / Gas station","Track the farthest reachable index; for gas, if total gas >= total cost, reset start when the tank goes negative."],
+["Minimum platforms / Meeting rooms","Sort arrivals and departures separately, or use a min-heap of end times."],
+["Huffman coding","Min-heap, repeatedly merge two smallest frequencies. Optimal prefix code."],
+["Candy distribution","Two passes (left to right, right to left) and take the max."],
+["Backtracking template","Choose, explore, un-choose. Prune early to cut the search."],
+["Subsets / Permutations / Combinations","Subsets 2^n, permutations n!. Sort and skip duplicates to avoid repeats."],
+["Combination sum","Allow reuse by recursing on the same index; skip duplicates at the same level."],
+["N-Queens / Sudoku","Track columns and diagonals (r-c, r+c) in sets or arrays; Sudoku checks row/col/box."],
+["Word search / Rat in a maze","DFS on grid, mark visited, unmark on return."],
+["Bit tricks","x & (x-1) clears lowest set bit; x & -x isolates it; XOR of equal numbers is 0; n is a power of two if n>0 and n&(n-1)==0."],
+["Count set bits","Brian Kernighan loop runs once per set bit."],
+["Single number problems","XOR all elements. For two uniques, split by a differing bit."],
+["Subsets using bits","Loop mask 0 to 2^n - 1; bit i set means include element i."],
+["GCD / Extended Euclid","gcd(a,b)=gcd(b,a%b), O(log n). LCM = a*b/gcd. Extended gives x,y with ax+by=gcd."],
+["Sieve of Eratosthenes","Primes up to n in O(n log log n)."],
+["Fast exponentiation","Binary exponentiation computes x^n in O(log n); use with modulus for large powers."],
+["Modular arithmetic","(a+b)%m, (a*b)%m work directly. Division needs modular inverse (Fermat, m prime): a^(m-2) % m. Common m = 1e9+7."],
+["Prime factorization & combinatorics","Trial division up to sqrt(n). nCr via Pascal's triangle or factorials with inverse."]
+]},
+{id:"heap",title:"10. Heaps & Advanced DS",items:[
+["Heap basics","Complete binary tree in an array. Parent i, children 2i+1 and 2i+2. Insert and extract O(log n), peek O(1)."],
+["Heapify","Build heap from an array in O(n) (not O(n log n))."],
+["Top K frequent / Kth largest","Min-heap of size k: O(n log k). Or quickselect, average O(n)."],
+["Median from data stream","Max-heap for lower half, min-heap for upper half; keep sizes balanced."],
+["Java PriorityQueue","Min-heap by default. For max: new PriorityQueue<>(Collections.reverseOrder()). Custom comparator for pairs."],
+["Sparse table","Range minimum/gcd queries in O(1) after O(n log n) preprocessing, static data only."],
+["Ordered set","Java TreeSet/TreeMap: floor, ceiling, first, last in O(log n)."],
+["Hash collisions","Chaining (list per bucket) or open addressing. Java 8 HashMap converts long chains to red-black trees."],
+["Bloom filter / LFU","Know they exist: probabilistic membership; LFU cache with frequency buckets."]
+]},
+{id:"java",title:"11. Java & OOP",items:[
+["Four pillars","Encapsulation (hide data), Abstraction (hide complexity), Inheritance (reuse), Polymorphism (many forms)."],
+["Overloading vs overriding","Overloading: same name, different params, compile-time. Overriding: subclass redefines method, runtime (dynamic dispatch)."],
+["Abstract class vs interface","Abstract: can hold state and constructors, single inheritance. Interface: contract, multiple inheritance, default/static methods since Java 8."],
+["Constructors","Same name as class, no return type, can be overloaded, this() and super() must be first statement. Default constructor exists only if none is written."],
+["static / final / finally","static belongs to class. final: variable can't change, method can't be overridden, class can't be extended. finally always runs after try/catch."],
+["Exception handling","Checked (compile-time, IOException) vs unchecked (RuntimeException). throw vs throws. try-with-resources closes AutoCloseable."],
+["SOLID","Single responsibility, Open-closed, Liskov substitution, Interface segregation, Dependency inversion."],
+["Composition vs inheritance","Prefer composition (has-a) for flexibility; inheritance (is-a) only for true subtype relations."],
+["HashMap internals","Array of buckets, index = hash & (n-1). Default capacity 16, load factor 0.75, resize doubles. Needs equals() and hashCode() contract."],
+["Collections","ArrayList (dynamic array, O(1) get), LinkedList, HashSet, LinkedHashMap (insertion order), TreeMap (sorted, red-black), ConcurrentHashMap (thread-safe), Vector (legacy sync)."],
+["Comparable vs Comparator","Comparable: natural order via compareTo in the class. Comparator: external, custom ordering."],
+["Memory model","Heap (objects, shared, GC managed) and Stack (frames, local variables per thread). Metaspace holds class metadata."],
+["Garbage collection","Unreachable objects are collected. Generational: Young (Eden, Survivor) then Old. Minor GC vs Major GC. G1 is the default collector."],
+["JVM architecture","Classloader, runtime data areas, execution engine (interpreter + JIT). JDK contains JRE contains JVM."],
+["String pool","String literals are interned in the pool; new String() creates a separate heap object. StringBuilder not thread-safe, StringBuffer is."],
+["Multithreading","Thread vs Runnable, synchronized, volatile (visibility), ExecutorService, deadlock conditions, wait/notify."],
+["Java 8 features","Lambdas, Streams, Optional, functional interfaces, method references, default methods."],
+["equals and hashCode","Equal objects must have equal hash codes. Override both together."],
+["Immutable class","final class, private final fields, no setters, defensive copies."],
+["Singleton and common patterns","Singleton (thread-safe via enum or double-checked locking), Factory, Builder, Observer, Strategy."]
+]},
+{id:"dbms",title:"12. DBMS",items:[
+["Keys","Primary (unique, not null), Candidate (any minimal unique key), Super, Foreign (references another table), Composite, Alternate."],
+["ER model","Entities, attributes, relationships, cardinality (1:1, 1:N, M:N). M:N needs a junction table."],
+["Normalization","1NF: atomic values. 2NF: no partial dependency on part of a composite key. 3NF: no transitive dependency. BCNF: every determinant is a candidate key."],
+["Denormalization","Add redundancy deliberately for read speed, accepting update anomalies."],
+["ACID","Atomicity (all or nothing), Consistency (valid state to valid state), Isolation (concurrent transactions don't interfere), Durability (committed data survives crashes)."],
+["Isolation levels","Read Uncommitted, Read Committed, Repeatable Read, Serializable. Problems: dirty read, non-repeatable read, phantom read."],
+["Concurrency control","Locks (shared/exclusive), two-phase locking, timestamp ordering, MVCC."],
+["Deadlock","Circular wait between transactions. Handle with detection (wait-for graph), prevention, or timeouts."],
+["Indexing","Speeds reads, slows writes, uses space. Clustered (data order = index order, one per table) vs non-clustered."],
+["B-Tree vs B+ Tree","B+ Tree stores data only in leaves, leaves linked for range scans. Databases prefer B+ Trees."],
+["SQL vs NoSQL","SQL: fixed schema, joins, ACID. NoSQL: flexible schema, horizontal scale, eventual consistency (BASE). CAP theorem: pick two of consistency, availability, partition tolerance."],
+["Transaction states","Active, partially committed, committed, failed, aborted. Rollback undoes changes."],
+["Query optimisation","Use indexes on filter/join columns, avoid SELECT *, check EXPLAIN plan, avoid functions on indexed columns."],
+["Sharding vs replication","Sharding splits data across nodes for scale. Replication copies data for availability and read scale."]
+]},
+{id:"sql",title:"13. SQL",items:[
+["Execution order","FROM/JOIN > WHERE > GROUP BY > HAVING > SELECT > ORDER BY > LIMIT."],
+["WHERE vs HAVING","WHERE filters rows before grouping. HAVING filters groups after aggregation."],
+["Joins","INNER (matching only), LEFT (all left + matches), RIGHT, FULL OUTER (all), CROSS (cartesian), SELF join."],
+["Second highest salary","SELECT MAX(salary) FROM emp WHERE salary < (SELECT MAX(salary) FROM emp); or DENSE_RANK() = 2."],
+["Nth highest","DENSE_RANK() OVER (ORDER BY salary DESC) = N, or LIMIT 1 OFFSET N-1 on distinct salaries."],
+["Window functions","ROW_NUMBER (unique), RANK (gaps on ties), DENSE_RANK (no gaps), LAG/LEAD, SUM() OVER (PARTITION BY ... ORDER BY ...)."],
+["CTE","WITH name AS (query) ... improves readability; recursive CTEs for hierarchies."],
+["Subquery types","Scalar, row, table (derived), correlated (runs per outer row), EXISTS vs IN."],
+["Find duplicates","GROUP BY col HAVING COUNT(*) > 1. Delete keeping one using ROW_NUMBER or a self join on id."],
+["DELETE vs TRUNCATE vs DROP","DELETE: rows, rollbackable, WHERE allowed. TRUNCATE: all rows, fast, resets identity. DROP: removes the table."],
+["UNION vs UNION ALL","UNION removes duplicates (slower). UNION ALL keeps them."],
+["Constraints","PRIMARY KEY, UNIQUE, NOT NULL, CHECK, FOREIGN KEY, DEFAULT."],
+["Stored procedures & triggers","Procedure: saved callable logic. Trigger: runs automatically on INSERT/UPDATE/DELETE. View: saved query."],
+["NULL handling","NULL = NULL is not true; use IS NULL. COALESCE returns the first non-null."],
+["Employees earning more than manager","Self join: e JOIN emp m ON e.manager_id = m.id WHERE e.salary > m.salary."]
+]},
+{id:"os",title:"14. Operating Systems",items:[
+["Process vs thread","Process: independent, own memory, heavy context switch. Thread: shares the process memory, lightweight."],
+["Process states","New, Ready, Running, Waiting, Terminated. PCB stores process info."],
+["Context switch","Saving and loading CPU state when switching processes. It is overhead."],
+["CPU scheduling","FCFS (convoy effect), SJF (optimal average waiting, starvation), Round Robin (time quantum, fair), Priority (starvation fixed by aging), Multilevel queue."],
+["Scheduling metrics","Turnaround = completion - arrival. Waiting = turnaround - burst. Response = first run - arrival."],
+["Deadlock conditions","Mutual exclusion, hold and wait, no preemption, circular wait. All four must hold."],
+["Deadlock handling","Prevention, avoidance (Banker's algorithm checks for a safe state), detection and recovery, ignore (ostrich)."],
+["Synchronization","Race condition and critical section. Solutions: mutex (ownership, binary lock), semaphore (counter; wait/signal), monitor."],
+["Classic problems","Producer-consumer, readers-writers, dining philosophers."],
+["Paging","Fixed-size frames and pages, page table, no external fragmentation, internal fragmentation possible. TLB caches translations."],
+["Segmentation","Variable-size logical segments, external fragmentation possible."],
+["Virtual memory & demand paging","Run programs larger than RAM; page fault loads a page from disk."],
+["Page replacement","FIFO (Belady's anomaly), LRU, Optimal, Clock. Thrashing means excessive page faults."],
+["Fragmentation","Internal: waste inside an allocated block. External: free memory scattered in small holes. Fix with compaction or paging."],
+["IPC","Pipes, message queues, shared memory, sockets, signals."],
+["User mode vs kernel mode; system calls","System call switches to kernel mode to access hardware safely."],
+["Starvation vs deadlock","Deadlock: nobody proceeds. Starvation: a process waits indefinitely while others proceed."]
+]},
+{id:"cn",title:"15. Computer Networks",items:[
+["OSI 7 layers","Physical, Data Link, Network, Transport, Session, Presentation, Application. (Please Do Not Throw Sausage Pizza Away)"],
+["TCP/IP 4 layers","Link, Internet (IP), Transport (TCP/UDP), Application (HTTP, DNS, FTP)."],
+["TCP vs UDP","TCP: connection-oriented, reliable, ordered, flow and congestion control. UDP: connectionless, fast, no guarantee (video, DNS, gaming)."],
+["Three-way handshake","SYN, SYN-ACK, ACK. Connection close uses FIN/ACK (4 steps)."],
+["HTTP vs HTTPS","HTTPS = HTTP over TLS: encryption, integrity, authentication. Default ports 80 and 443."],
+["HTTP methods & codes","GET, POST, PUT, PATCH, DELETE. 2xx success, 3xx redirect, 4xx client error (401 unauthenticated, 403 forbidden, 404), 5xx server error."],
+["What happens when you type a URL","DNS lookup, TCP handshake, TLS handshake, HTTP request, server response, browser renders."],
+["DNS","Translates domain to IP. Resolver > root > TLD > authoritative server. Records: A, AAAA, CNAME, MX, NS. Results are cached."],
+["IP addressing & subnetting","IPv4 is 32-bit, IPv6 is 128-bit. CIDR /24 = 256 addresses (254 usable hosts). Private ranges: 10.x, 172.16-31.x, 192.168.x."],
+["Routing","Routers forward by routing tables; RIP (distance vector), OSPF (link state), BGP (between ISPs)."],
+["ARP & DHCP","ARP maps IP to MAC. DHCP automatically assigns IP, gateway, DNS to devices."],
+["SSL/TLS","Handshake negotiates cipher, server certificate verified, session key exchanged (asymmetric), data encrypted (symmetric)."],
+["Congestion & flow control","Flow control protects the receiver (sliding window). Congestion control protects the network (slow start, congestion avoidance)."],
+["Load balancing","Distributes traffic across servers: round robin, least connections, IP hash. Layer 4 vs Layer 7."],
+["Cookies, sessions, JWT","Cookie stored on the client; session on the server; JWT is a signed stateless token."],
+["REST basics","Stateless, resource URLs, standard HTTP methods, JSON. Idempotent: GET, PUT, DELETE."],
+["Hub vs switch vs router","Hub broadcasts, switch forwards by MAC (L2), router forwards by IP between networks (L3)."]
+]},
+{id:"projects",title:"16. Project Explanation",items:[
+["60-second pitch","Problem, who it is for, your role, tech stack, one impressive result. Practise until smooth."],
+["Be ready to draw","Architecture diagram: client, API, database, auth, external services. Explain request flow end to end."],
+["Why this stack?","Have a reason for each choice and one alternative you considered with its trade-off."],
+["Database design","Collections/tables, relationships, indexes, why you normalised or embedded, a sample query."],
+["API design","Endpoints, status codes, validation, pagination, error handling, authentication and authorisation."],
+["Security","Password hashing (bcrypt), JWT/refresh tokens, input validation, rate limiting, CORS, HTTPS, no secrets in code."],
+["Challenges & solutions","Prepare 2-3 real bugs or design problems: what broke, how you debugged, what you changed."],
+["Scalability","Caching (Redis), DB indexes, pagination, load balancer, horizontal scaling, async/queues, CDN."],
+["Deployment","Where it is hosted, environment variables, CI/CD, logging and monitoring."],
+["What would you improve?","Tests, caching, better error handling, CI pipeline. Shows maturity."],
+["Honesty rule","Only describe what you built and can defend line by line. Expect 'show me the code for this' follow-ups."]
+]},
+{id:"hr",title:"17. HR Interview",items:[
+["Tell me about yourself","Present (education, skills) > past (projects, achievements) > future (why this role). Under 90 seconds."],
+["Why Infosys?","Learning culture, scale of projects, training, global clients, growth path. Show you researched them."],
+["Why Specialist Programmer?","It is a high-skill coding role: you enjoy problem solving, DSA, and want to build complex systems."],
+["Strengths","Pick 2 relevant ones with evidence (problem solving, quick learning). Back each with an example."],
+["Weakness","A real but fixable one plus what you are doing about it. Never say 'I'm a perfectionist'."],
+["Career goals","Short term: become a strong engineer. Long term: technical lead/architect. Align with the company."],
+["Teamwork & conflict","Use STAR: Situation, Task, Action, Result. Focus on listening, data-based discussion, and the outcome."],
+["Failure story","Own it, state what you learnt and what you do differently now."],
+["Relocation & shifts","Be flexible and positive; say you are open to relocating as needed."],
+["Salary expectation","Say you are focused on the role and growth, and open to the company's standard for this position. Do not name numbers first."],
+["Questions to ask them","Team and tech stack, training and mentoring, what success looks like in the first 6 months."],
+["In-person conduct","Eye contact, calm pace, listen fully before answering, say 'I don't know, but here is how I'd approach it' rather than bluffing."]
+]}
+];
+
+const KEY="spprep_done";
+const done=new Set(JSON.parse(localStorage.getItem(KEY)||"[]"));
+let cur=DATA[0].id;
+const $=s=>document.querySelector(s);
+const total=DATA.reduce((n,s)=>n+s.items.length,0);
+
+function save(){localStorage.setItem(KEY,JSON.stringify([...done]));progress();nav()}
+function progress(){
+  const p=Math.round(done.size/total*100);
+  $("#fill").style.width=p+"%";
+  $("#pct").textContent=done.size+" / "+total+" revised ("+p+"%)";
+}
+function nav(){
+  $("#nav").innerHTML=DATA.map(s=>{
+    const d=s.items.filter((_,i)=>done.has(s.id+i)).length;
+    return `<a class="${s.id===cur&&!$("#q").value?'on':''}" onclick="go('${s.id}')"><span>${s.title}</span><span>${d}/${s.items.length}</span></a>`;
+  }).join("");
+}
+function card(s,i){
+  const [t,d]=s.items[i],k=s.id+i;
+  return `<label class="card ${done.has(k)?'done':''}"><input type="checkbox" ${done.has(k)?'checked':''} onchange="tog('${k}')"><div><b>${t}</b><span>${d}</span></div></label>`;
+}
+function tog(k){done.has(k)?done.delete(k):done.add(k);save();render()}
+function go(id){cur=id;$("#q").value="";document.querySelector("aside").classList.remove("open");render();scrollTo(0,0)}
+function render(){
+  const q=$("#q").value.trim().toLowerCase();
+  if(q){
+    let html="",n=0;
+    DATA.forEach(s=>s.items.forEach((it,i)=>{
+      if((it[0]+" "+it[1]).toLowerCase().includes(q)){n++;html+=`<div class="meta" style="margin:10px 0 4px">${s.title}</div>`+card(s,i)}
+    }));
+    $("#view").innerHTML=`<h2>Search results (${n})</h2>`+(html||'<p class="meta">Nothing found.</p>');
+  }else{
+    const s=DATA.find(x=>x.id===cur);
+    $("#view").innerHTML=`<h2>${s.title}</h2><div class="meta">Tick each concept once you can explain it out loud.</div>`+s.items.map((_,i)=>card(s,i)).join("");
+  }
+  nav();
+}
+$("#q").addEventListener("input",render);
+progress();render();
+</script>
+</body>
+</html>
